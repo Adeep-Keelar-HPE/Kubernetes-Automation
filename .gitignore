@@ -1,2 +1,2 @@
 src/trials/ansible/inventory
-src/ansible/inventory
+src/ansible/single-master-n-workers-no-etcd/inventory
