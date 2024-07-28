@@ -1,4 +1,4 @@
-Setup -- Windows 11 Host System + WSL. VirtualBox for VMs. Ubuntu 22.04 Server ISO used.
+## Setup -- Windows 11 Host System + WSL (Ubuntu 22.04). VirtualBox for VMs. Ubuntu 22.04 Server ISO used.
 
 * Setup the Virtual Box VM. Make sure the VM has Bridged Adapter and not the NAT.
 
@@ -8,6 +8,7 @@ Setup -- Windows 11 Host System + WSL. VirtualBox for VMs. Ubuntu 22.04 Server I
 
 * Now, set up the static IP address. First detect the Host DNS Server Address (netsh interface ipv4 show dnsservers) After doing so, go to the /etc/netplan/00-*.yaml (just press tab to autofill) file, and edit the content like so -- 
 
+```
 network:
     ethernets:
         <port>: # whatever is mentioned by default say enp0s3, etc
@@ -16,7 +17,10 @@ network:
             nameservers:
                 addresses: [] # Add that IP address from the netsh command, choosing the correct value for the ethernet or the wifi module.
     version: 2
+```
 
 * run sudo netplan apply. Ignore warnings, but if there is an error, something is not correct. Check if indentation mistakes or incorrectly set values.
 
 * If everything is correct, you should be able to ping the static ip address from the Host to the Remote system or any other system to the VM on the same network. Also, you should be able to connect to the internet from the VM.
+
+* This guy's [Link](https://www.youtube.com/watch?v=haufmkuKq9A&t=874s) is very helpful! 
