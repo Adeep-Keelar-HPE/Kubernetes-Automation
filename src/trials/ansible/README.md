@@ -18,7 +18,7 @@
 
 	```
 	[all]
-	<ip-addr-1-remote-server> ansible_user=<user-name> ansible_ssh_private_key_file=<path>
+	<ip-addr-1-remote-server> ansible_user=<user-name> ansible_ssh_private_key_file=<path> ansible_become_password=<root-pass>
 	```
 * Test by running Ansible command.
 	`ansible all -i inventory -m ping`
