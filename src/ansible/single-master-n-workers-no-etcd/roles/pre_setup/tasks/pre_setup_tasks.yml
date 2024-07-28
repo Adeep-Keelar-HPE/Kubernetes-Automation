@@ -1,30 +1,69 @@
 # This role basically performs a series of plays that are a pre-setup list of tasks.
 # 1. Perform a basic update and upgrade.
-# 2. Install jq, and net-tools. 
+# 2. Install jq.
 
 ---
-- name: Start the Activity of the Pre-Setup.
+- name: Start the Activity of the Pre-Setup for {{ node_type }}.
   debug:
-    msg: "-------- Pre-Setup Activity --------"
+    msg: "-------- Pre-Setup Activity Start --------"
   tags:
     - pre_setup_tasks
 
-- name: Just check the network details.
-  shell: "ip addr | grep inet | grep /24"
+- name: Check the {{ node_type }} Node System Details.
+  shell: "uname -av"
+  register: system_details
+  become: true
+  become_user: root
+  tags:
+    - pre_setup_tasks
+
+- name: Print the {{ node_type }} Node System Details.
+  debug:
+    var: system_details.stdout_lines
+  tags:
+    - pre_setup_tasks
+
+- name: Check the Network Details of the {{ node_type }} Node.
+  shell: "hostname -I | awk '{print $1}'" 
   register: network_ip
   become: true
   become_user: root
   tags:
     - pre_setup_tasks
 
-- name: Print the Network Details
+- name: Print the Network Details of the {{ node_type }} Node.
   debug:
     var: network_ip.stdout_lines
   tags:
     - pre_setup_tasks
 
-- name: Run the Update Command.
+- name: Run the Update Command on the {{ node_type }} Node.
   become: true
   apt:
     update_cache: yes
     cache_valid_time: 86400
+  tags:
+    - pre_setup_tasks
+
+
+- name: Run the Upgrade Command on {{ node_type }} Node.
+  become: true
+  apt:
+    upgrade: yes
+  tags:
+    - pre_setup_tasks
+
+# Install JQ.
+- name: Install JQ on the {{ node_type }} Node.
+  become: true
+  apt:
+    name: jq
+    state: present
+  tags:
+    - pre_setup_tasks
+
+- name: End the Activity of the Pre-Setup for {{ node_type }}.
+  debug:
+    msg: "-------- Pre-Setup Activity End --------"
+  tags:
+    - pre_setup_tasks
