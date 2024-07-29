@@ -9,3 +9,6 @@ build:
 	@echo "Starting the Pre Check Tasks"
 	${ansible} -i inventory/hosts playbooks/pre_checks.yml
 	@echo "Ending the Pre Check Tasks"
+	@echo "Starting Container Pre Check Tasks"
+	${ansible} -i inventory/hosts playbooks/container_pre_checks.yml
+	@echo "Ending Container Pre Checks"

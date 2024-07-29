@@ -1,0 +1,85 @@
+# This role does the following tasks.
+# 1. Enable IPV4 Packet Forwarding. 
+# 2. Disable Swapoff Memory
+---
+- name: Start Activity of the Container Pre Check
+  debug:
+    msg: "-------- Container Pre-Check Activity Start --------"
+  tags:
+    - container_pre_check
+
+- name: Deploy the Sysctl Parameters for Kubernetes
+  template:
+    src: k8s.conf.j2
+    dest: /etc/sysctl.d/k8s.conf
+  become: true
+  become_user: root
+  tags:
+    - container_pre_check
+
+- name: Apply sysctl params without system reboot.
+  shell: 'sysctl --system'
+  become: true
+  become_user: root
+  tags:
+    - container_pre_check
+
+# - name: Verify if IPV4 Packet Forwarding is Enabled.
+#   shell: "sysctl net.ipv4.ip_forward | awk '{print $3}'"
+#   become: true
+#   become_user: root
+#   register: packet_forward_flag
+#   tags:
+#     - container_pre_check
+
+- name: Ensure IPV4 Packet Forwarding is Enabled
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+  become: true
+  tags:
+    - container_pre_check
+
+- name: Verify if IPV4 Packet Forwarding is Enabled
+  command: sysctl net.ipv4.ip_forward
+  register: packet_forward_flag
+  become: true
+  tags:
+    - container_pre_check
+
+- name: Check if IPV4 Packet Forwarding is Enabled
+  fail:
+    msg: "Packet Forward IPV4 failed to be enabled. Value -- {{ packet_forward_flag.stdout }}"
+  when: packet_forward_flag.stdout != "net.ipv4.ip_forward = 1"
+  tags:
+    - container_pre_check
+
+- name: Disable SWAP memory for the Cluster Setup.
+  shell: "sed -Ei '/swap/{s/^# /#/;s/^/# /}' /etc/fstab"
+  become: true
+  become_user: root
+  tags:
+    - container_pre_check
+
+- name: Disable SWAP memory for the Cluster Setup.
+  shell: "swapoff -a"
+  become: true
+  become_user: root
+  tags:
+    - container_pre_check
+
+- name: Verify if SWAP Memory is Disabled.
+  shell: "free | grep Swap | awk '{print $2}'"
+  register: swap_memory_val
+  become: true
+  become_user: root
+  tags:
+    - container_pre_check
+
+- name: Ensure SWAP Memory is Disabled
+  fail:
+    msg: "Failed to disable SWAP Memory. Value -- {{ swap_memory_val.stdout }}"
+  when: swap_memory_val.stdout != "0"
+  tags:
+    - container_pre_check
