@@ -1,0 +1,37 @@
+# This role does the following tasks.
+# 1. Verify if the MAC Address and the Product UUID is unique.
+
+---
+- name: Start Activity of the Pre-Check for the {{ node_type }}
+  debug:
+    msg: "-------- Pre-Check Activity Start --------"
+  tags:
+    - pre_check_tasks
+
+- name: Register the MAC Address of the {{ node_type }} Node.
+  shell: "hostname -I | awk '{print $2}'"
+  register: command_result
+  become: true
+  become_user: root
+  tags:
+    - pre_check_tasks
+
+- name: Printing the MAC Address of the {{ node_type }} Node.
+  debug:
+    var: command_result.stdout_lines
+  tags:
+    - pre_check_tasks
+
+- name: Register the Product UUID of the {{ node_type }} Node.
+  shell: "cat /sys/class/dmi/id/product_uuid"
+  register: command_result
+  become: true
+  become_user: root
+  tags:
+    - pre_check_tasks
+
+- name: Print the Product UUID of the {{ node_type }} Node.
+  debug:
+    var: command_result.stdout_lines
+  tags:
+    - pre_check_tasks

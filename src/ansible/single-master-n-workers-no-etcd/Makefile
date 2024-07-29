@@ -6,3 +6,6 @@ build:
 	@echo "Starting the Pre Setup Tasks"
 	${ansible} -i inventory/hosts playbooks/pre_setup.yml
 	@echo "Ending the Pre Setup Tasks"
+	@echo "Starting the Pre Check Tasks"
+	${ansible} -i inventory/hosts playbooks/pre_checks.yml
+	@echo "Ending the Pre Check Tasks"
