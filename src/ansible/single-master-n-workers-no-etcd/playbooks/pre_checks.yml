@@ -5,3 +5,10 @@
   become: yes
   roles:
     - pre_checks
+
+- hosts: worker
+  gather_facts: False
+  serial: 1
+  become: yes
+  roles:
+    - pre_checks

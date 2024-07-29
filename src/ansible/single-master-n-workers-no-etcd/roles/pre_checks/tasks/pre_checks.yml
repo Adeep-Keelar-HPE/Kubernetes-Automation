@@ -8,30 +8,133 @@
   tags:
     - pre_check_tasks
 
+# Master Node Tasks.
 - name: Register the MAC Address of the {{ node_type }} Node.
   shell: "hostname -I | awk '{print $2}'"
-  register: command_result
+  register: mac_result
   become: true
   become_user: root
+  when: inventory_hostname in groups['master']
+  tags:
+    - pre_check_tasks
+
+- name: Set Fact of the MAC Address of the {{ node_type }} Node.
+  set_fact:
+    "master_mac_address": "{{ mac_result.stdout }}"
+  when: inventory_hostname in groups['master']
   tags:
     - pre_check_tasks
 
 - name: Printing the MAC Address of the {{ node_type }} Node.
   debug:
-    var: command_result.stdout_lines
+    var: mac_result.stdout_lines
+  when: inventory_hostname in groups['master']
   tags:
     - pre_check_tasks
 
 - name: Register the Product UUID of the {{ node_type }} Node.
   shell: "cat /sys/class/dmi/id/product_uuid"
-  register: command_result
+  register: uuid_result
   become: true
   become_user: root
+  when: inventory_hostname in groups['master']
+  tags:
+    - pre_check_tasks
+
+- name: Set Fact of the Product UUID of the {{ node_type }} Node.
+  set_fact:
+    "master_product_uuid": "{{ uuid_result.stdout }}"
+  when: inventory_hostname in groups['master']
   tags:
     - pre_check_tasks
 
 - name: Print the Product UUID of the {{ node_type }} Node.
   debug:
-    var: command_result.stdout_lines
+    var: uuid_result.stdout_lines
+  when: inventory_hostname in groups['master']
+  tags:
+    - pre_check_tasks
+
+# Worker Node Tasks.
+- name: Register the MAC Address of the {{ node_type }} Node.
+  shell: "hostname -I | awk '{print $2}'"
+  register: mac_result
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['worker']
+  tags:
+    - pre_check_tasks
+
+- name: Set Fact of the MAC Address of the {{ node_type }} Node.
+  set_fact:
+    "worker_mac_address": "{{ mac_result.stdout }}"
+  when: inventory_hostname in groups['worker']
+  tags:
+    - pre_check_tasks
+
+- name: Printing the MAC Address of the {{ node_type }} Node.
+  debug:
+    var: mac_result.stdout_lines
+  when: inventory_hostname in groups['worker']
+  tags:
+    - pre_check_tasks
+
+- name: Register the Product UUID of the {{ node_type }} Node.
+  shell: "cat /sys/class/dmi/id/product_uuid"
+  register: uuid_result
+  become: true
+  become_user: root
+  when: inventory_hostname in groups['worker']
+  tags:
+    - pre_check_tasks
+
+- name: Set Fact of the Product UUID of the {{ node_type }} Node.
+  set_fact:
+    "worker_product_uuid": "{{ uuid_result.stdout }}"
+  when: inventory_hostname in groups['worker']
+  tags:
+    - pre_check_tasks
+
+- name: Print the Product UUID of the {{ node_type }} Node.
+  debug:
+    var: uuid_result.stdout_lines
+  when: inventory_hostname in groups['worker']
+  tags:
+    - pre_check_tasks
+
+# Comparison Tasks
+- name: Ensure MAC Addresses Do Not Match
+  fail:
+    msg: "MAC Address of Master ({{ hostvars[groups['master'][0]].master_mac_address }}) and Worker ({{ hostvars[inventory_hostname].worker_mac_address }}) match."
+  when: 
+    - inventory_hostname in groups['worker']
+    - hostvars[groups['master'][0]].master_mac_address == hostvars[inventory_hostname].worker_mac_address
+  tags:
+    - pre_check_tasks
+
+- name: Ensure MAC Addresses Do Not Match
+  debug:
+    msg: "MAC Address of Master and Worker do not match, as expected."
+  when:
+    - inventory_hostname in groups['worker']
+    - hostvars[groups['master'][0]].master_mac_address != hostvars[inventory_hostname].worker_mac_address
+  tags:
+    - pre_check_tasks
+
+- name: Ensure Product UUIDs Do Not Match
+  fail:
+    msg: "Product UUID of Master ({{ hostvars[groups['master'][0]].master_product_uuid }}) and Worker ({{ hostvars[inventory_hostname].worker_product_uuid }}) match."
+  when: 
+    - inventory_hostname in groups['worker']
+    - hostvars[groups['master'][0]].master_product_uuid == hostvars[inventory_hostname].worker_product_uuid
+  tags:
+    - pre_check_tasks  
+
+- name: Ensure Product UUIDs Do Not Match
+  debug:
+    msg: "Product UUID of Master and Worker do not match, as expected."
+  when:
+    - inventory_hostname in groups['worker']
+    - hostvars[groups['master'][0]].master_product_uuid != hostvars[inventory_hostname].worker_product_uuid
   tags:
     - pre_check_tasks
