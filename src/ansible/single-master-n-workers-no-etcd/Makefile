@@ -12,3 +12,5 @@ build:
 	@echo "Starting Container Pre Check Tasks"
 	${ansible} -i inventory/hosts playbooks/container_pre_checks.yml
 	@echo "Ending Container Pre Checks"
+	@echo "Setting up containerd"
+	${ansible} -i inventory/hosts playbooks/setup_containerd.yml
