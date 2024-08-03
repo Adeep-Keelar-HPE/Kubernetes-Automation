@@ -8,7 +8,7 @@
  2.1.2 Comment /etc/fstab swap memory and swapoff -a. Verify with free
 2.2 Install Container Runtime -- Containerd
 1. wget https://github.com/containerd/containerd/releases/download/v1.7.20/containerd-1.7.20-linux-amd64.tar.gz
-2. tar Cxzvf /usr/local containerd-1.7.20-linux-amd64.tar.gz
+2. tar Cxzvf /usr/local/bin containerd-1.7.20-linux-amd64.tar.gz
 3. wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service -O /usr/lib/systemd/system/containerd.service
 4. systemctl daemon-reload
 5. systemctl enable --now containerd
