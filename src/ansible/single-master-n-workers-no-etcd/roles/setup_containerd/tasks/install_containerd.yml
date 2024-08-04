@@ -1,24 +1,30 @@
 # This role does the following tasks.
 # 1. Gets the various containerd related packages.
 # 2. Untar the containerd packages, and place them in the necessary folders.
-# 3. Restart the services.
+# 3. Remove the tar file.
 ---
 - name: "Check if Containerd has already been setup."
   stat:
     path: "{{ containerd_package_dir }}"
   register: containerd_binary
+  become: true
+  become_user: root
   tags: containerd_setup
 
 - name: "Check if the Containerd Tarball is present."
   stat:
     path: /tmp/containerd.tar.gz
   register: containerd_tarball
+  become: true
+  become_user: root
   tags: containerd_setup
 
 - name: "Get the Containerd Package."
   ansible.builtin.get_url:
     url: "{{ containerd_package_url }}"
     dest: /tmp/containerd.tar.gz
+  become: true
+  become_user: root
   when: not containerd_tarball.stat.exists and not containerd_binary.stat.exists
   tags: containerd_setup
 
@@ -27,6 +33,8 @@
     src: /tmp/containerd.tar.gz
     dest: /usr/local/
     remote_src: yes
+  become: true
+  become_user: root
   when: not containerd_binary.stat.exists
   tags: containerd_setup
 
@@ -35,6 +43,8 @@
     path: "{{ containerd_package_dir }}"
     mode: '0755'
     state: file
+  become: true
+  become_user: root
   when: containerd_binary.stat.exists
   tags: containerd_setup
 
@@ -42,5 +52,7 @@
   file:
     path: /tmp/containerd.tar.gz
     state: absent
+  become: true
+  become_user: root
   when: containerd_tarball.stat.exists
   tags: containerd_setup

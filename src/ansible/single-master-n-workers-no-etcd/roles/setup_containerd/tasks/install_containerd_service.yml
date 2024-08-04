@@ -1,0 +1,97 @@
+# This role does the following tasks.
+# 1. Gets the Containerd Service binaries.
+# 2. Sets it up in the location needed.
+# 3. Reload the daemon. 
+# 4. Enable containerd service, and verify if containerd is up and running.
+--- 
+- name: "Check if the Containerd Service Binaries are already downloaded."
+  stat:
+    path: /tmp/containerd.service
+  register: containerd_service
+  become: true
+  become_user: root
+  tags: containerd_service_setup
+
+- name: "Check if Containerd Service Has Already been setup."
+  stat:
+    path: "{{ containerd_service_dir }}"
+  register: containerd_service_set
+  become: true
+  become_user: root
+  tags: containerd_service_setup
+
+- name: "Download the Containerd Service Binaries."
+  ansible.builtin.get_url:
+    url: "{{ containerd_service_package_url }}"
+    dest: /tmp/containerd.service
+  become: true
+  become_user: root
+  when: not containerd_service.stat.exists and not containerd_service_set.stat.exists
+  tags: containerd_service_setup
+
+- name: "Copy the Service Binaries to the Destination."
+  copy:
+    src: /tmp/containerd.service
+    dest: "{{ containerd_service_dir }}"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  become_user: root
+  when: not containerd_service_set.stat.exists
+  tags: containerd_service_setup
+
+- name: "Reload the System Daemon to recognise Containerd."
+  ansible.builtin.systemd_service:
+    daemon-reload: yes
+  become: true
+  become_user: root
+  when: not containerd_service_set.stat.exists
+  tags: containerd_service_setup
+
+- name: "Enable Containerd Service to start at Boot."
+  ansible.builtin.systemd_service:
+    name: containerd
+    enabled: yes
+  become: true
+  become_user: root
+  when: not containerd_service_set.stat.exists
+  tags: containerd_service_setup
+
+- name: "Start the Containerd Service"
+  ansible.builtin.systemd_service:
+    name: containerd
+    state: started
+  become: true
+  become_user: root
+  when: not containerd_service_set.stat.exists
+  tags: containerd_service_setup
+
+- name: "Remove the Containerd Service file from the temp folder."
+  file:
+    path: /tmp/containerd.service
+    state: absent
+  become: true
+  become_user: root
+  when: containerd_service.stat.exists
+  tags: containerd_service_setup
+
+- name: "Verify Containerd Status."
+  ansible.builtin.systemd:
+    name: "containerd"
+  register: containerd_running_status
+  become: true
+  become_user: root
+  tags: containerd_service_setup
+
+- name: "Verify Containerd Status."
+  debug: 
+    var: containerd_running_status.status.ActiveState
+  tags: containerd_service_setup
+
+- name: "Verify Containerd Status."
+  fail:
+    msg: "Containerd Service not active. Current state: {{ containerd_running_status.status.ActiveState }}"
+  when: containerd_running_status.status.ActiveState != "active"
+  tags: containerd_service_setup

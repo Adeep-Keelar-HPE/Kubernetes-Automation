@@ -1,1 +1,2 @@
 - import_tasks: tasks/install_containerd.yml
+- import_tasks: tasks/install_containerd_service.yml
