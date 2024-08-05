@@ -1,0 +1,78 @@
+# These tasks do the following
+# 1. Create a directory /opt/cni/bin
+# 2. Get the tar ball for CNI plugins for container networking.
+# 3. Untar and place them in the directory. 
+---
+- name: "Verify the existence of the CNI Plugins directory"
+  file:
+    path: "{{ cni_plugins_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  become_user: root
+  tags: cni_plugin_setup
+
+- name: "Check if the CNI Plugins directory has anything."
+  command: "ls -A {{ cni_plugins_directory }}"
+  register: cni_plugin_initial_check
+  ignore_errors: true
+  become: true
+  become_user: root
+  tags: cni_plugin_setup
+
+- name: "Check if the CNI Plugins directory has anything."
+  set_fact:
+    cni_plugins_dir_is_empty: "{{ cni_plugin_initial_check.stdout == '' }}"
+  when: cni_plugin_initial_check.rc == 0
+  tags: cni_plugin_setup
+
+- name: "Check if the CNI Plugin Tarball has been downloaded"
+  stat:
+    path: /tmp/cni-plugins.tgz
+  register: cni_plugin_tar_install
+  become: true
+  become_user: root
+  tags: cni_plugin_setup
+
+- name: "Download the CNI Plugin Tarball"
+  ansible.builtin.get_url:
+    url: "{{ cni_plugins_url }}"
+    dest: /tmp/cni-plugins.tgz
+  become: true
+  become_user: root
+  when: not cni_plugin_tar_install.stat.exists and cni_plugins_dir_is_empty
+  tags: cni_plugin_setup
+
+- name: "Extract the CNI Plugin binaries."
+  ansible.builtin.unarchive:
+    src: /tmp/cni-plugins.tgz
+    dest: "{{ cni_plugins_directory }}"
+    remote_src: yes
+  become: true
+  become_user: root
+  when: cni_plugins_dir_is_empty
+  tags: cni_plugin_setup
+
+- name: "Verify if the CNI Plugin binaries exist."
+  command: "ls {{ cni_plugins_directory }}"
+  register: cni_plugin_dir_content
+  become: true
+  become_user: root
+  tags: cni_plugin_setup
+
+- name: "Verify if the CNI Plugin binaries exist."
+  debug:
+    msg: "{{ item }}"
+  with_items: "{{ cni_plugin_dir_content.stdout_lines }}"
+  tags: cni_plugin_setup
+
+- name: "Remove the CNI Plugin tarball for the temp directory."
+  file:
+    path: /tmp/cni-plugins.tgz
+    state: absent
+  become: true
+  become_user: root
+  when: cni_plugin_tar_install.stat.exists
+  tags: cni_plugin_setup
