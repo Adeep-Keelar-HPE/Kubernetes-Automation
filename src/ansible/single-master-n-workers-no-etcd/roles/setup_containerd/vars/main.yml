@@ -6,3 +6,4 @@ runc_package_url: "https://github.com/opencontainers/runc/releases/download/v1.2
 runc_package_dir: "/usr/local/sbin/runc"
 cni_plugins_url: "https://github.com/containernetworking/plugins/releases/download/v1.5.1/cni-plugins-linux-amd64-v1.5.1.tgz"
 cni_plugins_directory: "/opt/cni/bin"
+containerd_config: "/etc/containerd"

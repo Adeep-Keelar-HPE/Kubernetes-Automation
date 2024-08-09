@@ -10,7 +10,7 @@
 
 # Master Node Tasks.
 - name: Register the MAC Address of the {{ node_type }} Node.
-  shell: "hostname -I | awk '{print $2}'"
+  shell: "cat /sys/class/net/*/address | awk '$1 != \"00:00:00:00:00:00\" && NR==1 {print $1}'"
   register: mac_result
   become: true
   become_user: root

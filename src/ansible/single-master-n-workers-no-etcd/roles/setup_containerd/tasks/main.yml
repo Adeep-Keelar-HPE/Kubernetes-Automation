@@ -2,3 +2,4 @@
 - import_tasks: tasks/install_containerd_service.yml
 - import_tasks: tasks/install_runc_env.yml
 - import_tasks: tasks/install_cni_plugins.yml
+- import_tasks: tasks/containerd_config_setup.yml

@@ -1,0 +1,60 @@
+# These tasks do the following ---
+# 1. Verify the cgroup type.
+# 2. Create the required directory.
+# 3. Setup the containerd toml file
+# 4. Restart the containerd service.
+---
+- name: "Verify the cgroup type is cgroupv2"
+  command: "stat -fc %T /sys/fs/cgroup/"
+  register: cgroup_var
+  become: true
+  become_user: root
+  tags: containerd_config_setup
+
+- name: "Verify the cgroup type is cgroupv2"
+  fail:
+    msg: "Cgroup type is not cgroupv2 -- {{ cgroup_var.stdout }}"
+  when: cgroup_var.stdout != "cgroup2fs"
+  tags: containerd_config_setup
+
+- name: "Verify the containerd config directory is present or not."
+  file:
+    path: "{{ containerd_config }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  become_user: root
+  tags: containerd_config_setup
+
+- name: "Check if the containerd config directory has the toml file."
+  command: "ls -A {{ containerd_config }}"
+  register: containerd_config_initial_check
+  ignore_errors: true
+  become: true
+  become_user: root
+  tags: containerd_config_setup
+
+- name: "Check if the containerd config directory has the toml file."
+  set_fact:
+    containerd_config_empty: "{{ containerd_config_initial_check.stdout == '' }}"
+  when: containerd_config_initial_check.rc == 0
+  tags: containerd_config_setup
+
+- name: "Copy the Containerd Default Config Toml file to the directory"
+  template:
+    src: containerd_default_config.toml.j2
+    dest: "{{ containerd_config }}/config.toml"
+  when: containerd_config_empty
+  become: true
+  become_user: root
+  tags: containerd_config_setup
+
+- name: "Restart the Containerd Service."
+  ansible.builtin.systemd_service:
+    name: containerd
+    state: restarted
+  become: true
+  become_user: root
+  tags: containerd_config_setup
