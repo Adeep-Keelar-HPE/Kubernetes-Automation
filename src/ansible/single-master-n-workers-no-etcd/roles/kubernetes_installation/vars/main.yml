@@ -1,0 +1,2 @@
+keyrings_path: "/etc/apt/keyrings"
+kubernetes_version: "v1.29"

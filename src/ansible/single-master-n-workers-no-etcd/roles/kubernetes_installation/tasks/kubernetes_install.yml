@@ -1,0 +1,91 @@
+- name: Install the pre-required packages for Kubernetes.
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - curl
+      - ca-certificates
+      - gpg
+    state: present
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Setup directory keyrings if not present.
+  ansible.builtin.file:
+    path: "{{ keyrings_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Check if the keyrings directory is present.
+  ansible.builtin.stat:
+    path: "{{ keyrings_path }}/kubernetes-apt-keyring.gpg"
+  register: gpg_present
+  tags: kubernetes_install
+
+- name: Download the public signing key for the Kubernetes package.
+  ansible.builtin.get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-release.key
+    mode: '0644'
+  when: not gpg_present.stat.exists
+  register: key_download
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Convert the public signing key to GPG format.
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /etc/apt/keyrings/kubernetes-release.key
+  when: key_download.changed
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Add the Kubernetes Apt repository.
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+    state: present
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Update the Apt Repository.
+  ansible.builtin.apt:
+    update_cache: yes
+  when: key_download.changed
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Install the required Kubernetes packages.
+  ansible.builtin.apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Hold the Kubernetes packages from further updates.
+  ansible.builtin.command:
+    cmd: >
+      apt-mark hold kubelet kubeadm kubectl
+  become: true
+  become_user: root
+  tags: kubernetes_install
+
+- name: Enable and start kubelet.
+  ansible.builtin.systemd:
+    name: kubelet
+    enabled: yes
+    state: started
+  become: true
+  become_user: root
+  tags: kubernetes_install

@@ -14,3 +14,5 @@ build:
 	@echo "Ending Container Pre Checks"
 	@echo "Setting up containerd"
 	${ansible} -i inventory/hosts playbooks/setup_containerd.yml
+	@echo "Downloading the Kubernetes packages."
+	${ansible} -i inventory/hosts playbooks/kubernetes_installation.yml
