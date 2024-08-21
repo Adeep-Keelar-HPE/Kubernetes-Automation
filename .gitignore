@@ -1,2 +1,3 @@
 src/trials/ansible/inventory
 src/ansible/single-master-n-workers-no-etcd/inventory
+src/ansible/microk8s/single-node/install/inventory

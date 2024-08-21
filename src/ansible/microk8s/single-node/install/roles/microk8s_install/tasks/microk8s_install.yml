@@ -1,0 +1,88 @@
+---
+- name: List the Snap Package Content.
+  ansible.builtin.shell:
+    snap info microk8s | grep {{ install_version }}
+  register: snap_info
+  become: true
+  become_user: root
+
+- name: List the Snap Package Content.
+  ansible.builtin.debug:
+    var: snap_info.stdout_lines
+
+- name: Check if Microk8s has been installed. 
+  ansible.builtin.command:
+    snap list microk8s
+  register: microk8s_installed
+  ignore_errors: true
+  become: true
+  become_user: root
+
+- name: Install Microk8s of version {{ install_version }}
+  ansible.builtin.command:
+    "snap install microk8s --classic --channel={{ install_version }}/stable"
+  become: true
+  become_user: root
+  when: microk8s_installed.rc != 0
+
+- name: Start Microk8s Service.
+  ansible.builtin.command:
+    "microk8s start"
+  become: true
+  become_user: root
+  when: microk8s_installed.rc != 0
+
+- name: Check if user is already in microk8s group.
+  ansible.builtin.shell: "getent group microk8s | grep -q '\\b{{ ansible_user }}\\b'"
+  register: user_in_group
+  ignore_errors: true
+  changed_when: false
+
+- name: Add Microk8s to the User Group.
+  ansible.builtin.command:
+    "usermod -a -G microk8s {{ ansible_user }}"
+  become: true
+  become_user: root
+  when: user_in_group.rc != 0
+
+- name: Create the kube directory.
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Await status of Microk8s to become Ready.
+  ansible.builtin.command:
+    "microk8s status --wait-ready --timeout 300"
+  become: true
+  become_user: root
+  register: microk8s_status
+
+- name: Status of MicroK8s
+  ansible.builtin.debug:
+    var: microk8s_status.stdout_lines
+
+- name: Get Microk8s Version.
+  ansible.builtin.command:
+    "microk8s version"
+  become: true
+  become_user: root
+  register: microk8s_version
+
+- name: Get MicroK8s Version.
+  ansible.builtin.debug:
+    var: microk8s_version.stdout_lines
+
+- name: Get Microk8s Node Status.
+  ansible.builtin.command:
+    "microk8s kubectl get nodes"
+  become: true
+  become_user: root
+  register: microk8s_node
+
+- name: Get MicroK8s Node Status.
+  ansible.builtin.debug:
+    var: microk8s_node.stdout_lines
+  
