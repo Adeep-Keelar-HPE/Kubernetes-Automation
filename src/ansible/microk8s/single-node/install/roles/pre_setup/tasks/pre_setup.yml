@@ -1,0 +1,21 @@
+---
+- name: Run a few pre-setup requirements before the Microk8s Installation.
+  debug:
+    msg: "--- Pre Setup Checks ---"
+  
+- name: Update the System.
+  become: true
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  
+- name: Upgrade the System.
+  become: true
+  apt:
+    upgrade: true
+  
+- name: Install JQ. 
+  become: true
+  apt:
+    name: jq
+    state: present
